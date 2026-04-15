@@ -121,9 +121,9 @@ export default function Dashboard() {
                 </div>
 
                 <div className="event-actions">
-                  <a href={`/book/${event.slug}`} className="button button--ghost">
-                    Open
-                  </a>
+                 <Link to={`/book/${event.slug}`} className="button button--ghost">
+  Open
+</Link>
                   <button
                     type="button"
                     onClick={() => {
