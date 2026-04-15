@@ -40,6 +40,10 @@ export default function Dashboard() {
     }
   };
 
+  const res = await api.get("/events");
+console.log("API DATA:", res.data);  
+setEvents(Array.isArray(res.data) ? res.data : []);
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
