@@ -93,3 +93,111 @@ export const deleteOverride = async (req, res) => {
     res.status(500).json(err);
   }
 };
+
+export const generateSlots = async (req, res) => {
+  try {
+    const { event_id, date } = req.query;
+
+    // 👉 Get event
+    const eventResult = await db.query(
+      "SELECT * FROM events WHERE id=$1",
+      [event_id]
+    );
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const event = eventResult.rows[0];
+    const duration = Number(event.duration) || 30;
+    const bufferBefore = Number(event.buffer_before) || 0;
+    const bufferAfter = Number(event.buffer_after) || 0;
+
+    // 👉 Get day name
+    const day = new Date(date).toLocaleString("en-US", {
+      weekday: "long",
+    });
+
+    // 👉 Check override
+    const overrideResult = await db.query(
+      "SELECT * FROM availability_overrides WHERE event_id=$1 AND override_date=$2",
+      [event_id, date]
+    );
+
+    const override = overrideResult.rows[0];
+
+    if (override?.is_blocked) {
+      return res.json([]);
+    }
+
+    let start_time, end_time;
+
+    if (override) {
+      start_time = override.start_time;
+      end_time = override.end_time;
+    } else {
+      const availabilityResult = await db.query(
+        "SELECT * FROM availability WHERE event_id=$1 AND day_of_week=$2",
+        [event_id, day]
+      );
+
+      if (availabilityResult.rows.length === 0) {
+        return res.json([]);
+      }
+
+      start_time = availabilityResult.rows[0].start_time;
+      end_time = availabilityResult.rows[0].end_time;
+    }
+
+    // 👉 Generate slots
+    let cursor = new Date(`${date}T${start_time}`);
+    const windowEnd = new Date(`${date}T${end_time}`);
+    const slots = [];
+
+    while (cursor < windowEnd) {
+      const slotStart = new Date(cursor);
+      const slotEnd = new Date(slotStart);
+      slotEnd.setMinutes(slotEnd.getMinutes() + duration);
+
+      if (slotEnd <= windowEnd) {
+        slots.push(slotStart.toTimeString().slice(0, 5));
+      }
+
+      cursor.setMinutes(cursor.getMinutes() + 30);
+    }
+
+    // 👉 Get booked slots
+    const bookedResult = await db.query(
+      "SELECT time FROM bookings WHERE event_id=$1 AND date=$2",
+      [event_id, date]
+    );
+
+    const booked = bookedResult.rows;
+
+    // 👉 Filter available slots
+    const available = slots.filter((slot) => {
+      const candidateStart = new Date(`${date}T${slot}`);
+      const candidateEnd = new Date(candidateStart);
+      candidateEnd.setMinutes(candidateEnd.getMinutes() + duration);
+
+      return !booked.some((b) => {
+        const bookedStart = new Date(`${date}T${b.time}`);
+        const bookedEnd = new Date(bookedStart);
+        bookedEnd.setMinutes(bookedEnd.getMinutes() + duration);
+
+        const blockedStart = new Date(bookedStart);
+        blockedStart.setMinutes(blockedStart.getMinutes() - bufferBefore);
+
+        const blockedEnd = new Date(bookedEnd);
+        blockedEnd.setMinutes(blockedEnd.getMinutes() + bufferAfter);
+
+        return candidateStart < blockedEnd && candidateEnd > blockedStart;
+      });
+    });
+
+    res.json(available);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+};
