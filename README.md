@@ -3,14 +3,6 @@
 A full-stack scheduling and booking web application inspired by Cal.com.
 Users can create event types, define availability, and allow others to book time slots via a public page.
 
----
-
-##  Live Demo
-
-*  Frontend (Vercel): https://your-frontend-url.vercel.app
-*  Backend (Render): https://schedule-meet-ib1r.onrender.com
-
----
 
 ##  Tech Stack
 
@@ -190,7 +182,7 @@ npm run dev
 
 ---
 
-## ⚠️ Known Issues
+##  Known Issues
 
 * Render free tier causes cold starts (delay on first request)
 * Ensure `vercel.json` is configured for routing
@@ -198,23 +190,12 @@ npm run dev
 
 ---
 
-## 📌 Future Improvements
+##  Future Improvements
 
-* 📅 Interactive calendar UI
-* 📧 Email notifications
-* 🔁 Rescheduling flow
-* 🌍 Multi-timezone support
-* 🎨 UI polish (closer to Cal.com)
+*  Interactive calendar UI
+*  Email notifications
+*  Rescheduling flow
+*  Multi-timezone support
+*  UI polish (closer to Cal.com)
 
----
 
-## 🙌 Author
-
-**Vignesh Chivirala**
-GitHub: https://github.com/Vignesh-Chivirala
-
----
-
-## ⭐ If you like this project
-
-Give it a star ⭐ and share!
