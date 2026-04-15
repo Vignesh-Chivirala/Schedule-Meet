@@ -2,7 +2,6 @@ import express from "express";
 import {
   saveAvailability,
   getAvailability,
-  generateSlots,
   getOverrides,
   saveOverride,
   deleteOverride,
@@ -15,7 +14,7 @@ router.post("/overrides", saveOverride);
 router.delete("/overrides/:id", deleteOverride);
 
 
-router.get("/slots", generateSlots);
+
 router.get("/overrides/:event_id", getOverrides);
 
 
