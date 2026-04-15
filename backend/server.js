@@ -21,7 +21,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/availability", availabilityRoutes);
 
 app.get("/", (req, res) => {
-  res.send("🚀 API is running");
+  res.send(" API is running");
 });
 
 app.listen(5000, () => {

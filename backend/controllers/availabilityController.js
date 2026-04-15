@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-// ✅ SAVE AVAILABILITY
+
 export const saveAvailability = async (req, res) => {
   try {
     const { event_id, days, start_time, end_time, timezone } = req.body;
@@ -31,7 +31,7 @@ export const saveAvailability = async (req, res) => {
   }
 };
 
-// ✅ GET AVAILABILITY
+// GET AVAILABILITY
 export const getAvailability = async (req, res) => {
   try {
     const result = await db.query(
@@ -44,7 +44,7 @@ export const getAvailability = async (req, res) => {
   }
 };
 
-// ✅ GET OVERRIDES
+// GET OVERRIDES
 export const getOverrides = async (req, res) => {
   try {
     const result = await db.query(
@@ -57,7 +57,7 @@ export const getOverrides = async (req, res) => {
   }
 };
 
-// ✅ SAVE OVERRIDE (Postgres UPSERT)
+//SAVE OVERRIDE (Postgres UPSERT)
 export const saveOverride = async (req, res) => {
   try {
     const { event_id, override_date, start_time, end_time, is_blocked = false } = req.body;
@@ -81,7 +81,7 @@ export const saveOverride = async (req, res) => {
   }
 };
 
-// ✅ DELETE OVERRIDE
+//DELETE OVERRIDE
 export const deleteOverride = async (req, res) => {
   try {
     await db.query(
@@ -102,7 +102,7 @@ export const generateSlots = async (req, res) => {
       return res.status(400).json({ message: "Missing params" });
     }
 
-    // ✅ get event
+    // get event
     const eventRes = await db.query(
       "SELECT * FROM events WHERE id=$1",
       [event_id]
@@ -115,12 +115,12 @@ export const generateSlots = async (req, res) => {
     const event = eventRes.rows[0];
     const duration = Number(event.duration) || 30;
 
-    // ✅ get day
+    // get day
     const day = new Date(date).toLocaleString("en-US", {
       weekday: "long",
     });
 
-    // ✅ get availability
+    //  get availability
     const availRes = await db.query(
       "SELECT * FROM availability WHERE event_id=$1 AND day_of_week=$2",
       [event_id, day]
@@ -133,11 +133,11 @@ export const generateSlots = async (req, res) => {
     let start = availRes.rows[0].start_time;
     let end = availRes.rows[0].end_time;
 
-    // ⚠️ FIX TIME FORMAT (IMPORTANT)
+    
     start = start.toString().slice(0, 5);
     end = end.toString().slice(0, 5);
 
-    // ✅ generate slots
+    //  generate slots
     let cursor = new Date(`${date}T${start}:00`);
     const windowEnd = new Date(`${date}T${end}:00`);
     const slots = [];
@@ -154,7 +154,7 @@ export const generateSlots = async (req, res) => {
       cursor.setMinutes(cursor.getMinutes() + 30);
     }
 
-    // ✅ remove booked
+    //  remove booked
     const bookedRes = await db.query(
       "SELECT time FROM bookings WHERE event_id=$1 AND date=$2",
       [event_id, date]

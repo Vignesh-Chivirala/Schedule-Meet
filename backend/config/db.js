@@ -11,13 +11,13 @@ const db = new Pool({
   },
 });
 
-// Optional: test connection
+
 db.connect()
   .then(() => {
-    console.log("✅ Connected to Supabase PostgreSQL");
+    console.log("Connected to Supabase PostgreSQL");
   })
   .catch((err) => {
-    console.error("❌ DB Connection Error:", err.message);
+    console.error("DB Connection Error:", err.message);
   });
 
 export default db;

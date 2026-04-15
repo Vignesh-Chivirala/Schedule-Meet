@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-// ✅ CREATE EVENT
+//  CREATE EVENT
 export const createEvent = async (req, res) => {
   try {
     const {
@@ -29,7 +29,7 @@ export const createEvent = async (req, res) => {
   }
 };
 
-// ✅ GET ALL EVENTS
+//  GET ALL EVENTS
 export const getEvents = async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM events");
@@ -39,7 +39,7 @@ export const getEvents = async (req, res) => {
   }
 };
 
-// ✅ GET EVENT BY SLUG
+//  GET EVENT BY SLUG
 export const getEventBySlug = async (req, res) => {
   try {
     const result = await db.query(
@@ -57,7 +57,7 @@ export const getEventBySlug = async (req, res) => {
   }
 };
 
-// ✅ DELETE EVENT
+//  DELETE EVENT
 export const deleteEvent = async (req, res) => {
   try {
     await db.query("DELETE FROM events WHERE id = $1", [req.params.id]);
@@ -67,7 +67,7 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-// ✅ UPDATE EVENT
+//  UPDATE EVENT
 export const updateEvent = async (req, res) => {
   try {
     const {

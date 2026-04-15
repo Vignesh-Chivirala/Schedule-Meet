@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-// ✅ CREATE BOOKING
+//  CREATE BOOKING
 export const createBooking = async (req, res) => {
   try {
     const { event_id, name, email, date, time, custom_answer = null } = req.body;
@@ -45,13 +45,13 @@ export const getBookings = async (req, res) => {
       ORDER BY bookings.date ASC, bookings.time ASC
     `);
 
-    res.json(result.rows); // 🔥 IMPORTANT
+    res.json(result.rows); //  IMPORTANT
   } catch (err) {
     res.status(500).json(err);
   }
 };
 
-// ✅ UPDATE BOOKING (RESCHEDULE)
+//  UPDATE BOOKING (RESCHEDULE)
 export const updateBooking = async (req, res) => {
   try {
     const { id } = req.params;
@@ -88,7 +88,7 @@ export const updateBooking = async (req, res) => {
   }
 };
 
-// ✅ DELETE BOOKING
+//  DELETE BOOKING
 export const deleteBooking = async (req, res) => {
   try {
     await db.query("DELETE FROM bookings WHERE id=$1", [req.params.id]);
