@@ -1,4 +1,4 @@
-#  Schedule Meet – Cal.com Clone
+#  Schedule Meet
 
 A full-stack scheduling and booking web application inspired by Cal.com.
 Users can create event types, define availability, and allow others to book time slots via a public page.
