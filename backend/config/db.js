@@ -3,11 +3,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT
 });
 
 function ensureSchema() {
@@ -92,6 +92,9 @@ db.connect((err) => {
   ensureSchema();
 });
 
-
+console.log("ENV DEBUG:");
+console.log(process.env.MYSQLHOST);
+console.log(process.env.MYSQLUSER);
+console.log(process.env.MYSQLPORT);
 
 export default db;
