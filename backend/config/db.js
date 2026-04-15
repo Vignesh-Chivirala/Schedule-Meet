@@ -90,4 +90,9 @@ db.connect((err) => {
   ensureSchema();
 });
 
+console.log("ENV DEBUG:");
+console.log("HOST:", process.env.DB_HOST);
+console.log("USER:", process.env.DB_USER);
+console.log("PORT:", process.env.DB_PORT);
+
 export default db;
