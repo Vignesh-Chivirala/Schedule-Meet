@@ -1,4 +1,6 @@
 import mysql from "mysql2";
+import dotenv from "dotenv";
+dotenv.config();
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -90,9 +92,6 @@ db.connect((err) => {
   ensureSchema();
 });
 
-console.log("ENV DEBUG:");
-console.log("HOST:", process.env.DB_HOST);
-console.log("USER:", process.env.DB_USER);
-console.log("PORT:", process.env.DB_PORT);
+
 
 export default db;
