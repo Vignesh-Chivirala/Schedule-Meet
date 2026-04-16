@@ -297,25 +297,30 @@ export default function AvailabilityForm({ eventId }) {
           </div>
         </div>
 
-        <label className="availability-checkbox">
-          <input
-            type="checkbox"
-            checked={overrideForm.is_blocked}
-            onChange={(e) =>
-              setOverrideForm((current) => ({ ...current, is_blocked: e.target.checked }))
-            }
-          />
-          <span>Block this entire date</span>
-        </label>
+<div className="override-actions">
+  <label className="availability-checkbox">
+    <input
+      type="checkbox"
+      checked={overrideForm.is_blocked}
+      onChange={(e) =>
+        setOverrideForm((current) => ({
+          ...current,
+          is_blocked: e.target.checked,
+        }))
+      }
+    />
+    <span>Block this entire date</span>
+  </label>
 
-        <button
-          type="button"
-          onClick={saveOverride}
-          disabled={saving}
-          className="button button--secondary"
-        >
-          Save date override
-        </button>
+  <button
+    type="button"
+    onClick={saveOverride}
+    disabled={saving}
+    className="button button--secondary"
+  >
+    {saving ? "Saving..." : "Save date override"}
+  </button>
+</div>
 
         <div className="override-list">
           {overrides.length === 0 ? (

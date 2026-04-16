@@ -5,14 +5,14 @@ const slots = ["10:00", "10:30", "11:00", "11:30", "14:00", "14:30"];
 
 const highlights = [
   {
-    title: "Cleaner booking flow",
+    title: "Effortless scheduling",
     description:
-      "Event details, date selection, and confirmation now live in one coherent flow.",
+      "Simple, fast, and distraction-free.",
   },
   {
-    title: "Reliable fallback",
+    title: "Smart availability",
     description:
-      "The app keeps working even when the local MySQL setup is incomplete.",
+      "Only see times that actually work.",
   },
 ];
 
@@ -49,15 +49,13 @@ export default function Home() {
         <section className="hero-grid">
           <div className="hero-copy hero-copy--dark">
             <span className="marketing-badge marketing-badge--dark">
-              Working scheduling flow with upgraded UI
+              Scheduling, reimagined
             </span>
 
-            <h1>Schedule meetings with a calmer, sharper booking experience.</h1>
+            <h1>Schedule meetings without the chaos.</h1>
 
             <p>
-              This rebuild keeps the product lightweight while pushing the experience
-              closer to a modern scheduling app: cleaner hierarchy, stronger visual
-              rhythm, and a booking flow that actually connects to usable data.
+              A clean, modern scheduling experience built for speed, clarity, and real availability.
             </p>
 
             <div className="hero-actions hero-actions--dark">
@@ -74,14 +72,14 @@ export default function Home() {
             <section className="showcase-card">
               <div className="showcase-card__header">
                 <div>
-                  <p className="showcase-card__eyebrow">Mia Chen</p>
+                  <p className="showcase-card__eyebrow">Vignesh</p>
                   <h2>Discovery call</h2>
                 </div>
                 <span className="showcase-live">Live</span>
               </div>
 
               <p className="showcase-card__description">
-                A fast, high-signal meeting page that feels intentional on desktop and mobile.
+                A quick call to align, plan, and move forward.
               </p>
 
               <div className="showcase-slot-panel">

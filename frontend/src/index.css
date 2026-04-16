@@ -1492,3 +1492,16 @@ button {
     align-items: flex-start;
   }
 }
+
+.override-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.override-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
