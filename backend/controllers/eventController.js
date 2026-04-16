@@ -13,6 +13,7 @@ export const createEvent = async (req, res) => {
       custom_question = null,
     } = req.body;
 
+    //  insert event
     const result = await db.query(
       `
       INSERT INTO events
@@ -23,8 +24,26 @@ export const createEvent = async (req, res) => {
       [title, description, duration, slug, buffer_before, buffer_after, custom_question]
     );
 
-    res.json({ id: result.rows[0].id });
+    const eventId = result.rows[0].id;
+
+    //  ADD THIS PART (AUTO AVAILABILITY)
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+    for (let day of days) {
+      await db.query(
+        `
+        INSERT INTO availability (event_id, day_of_week, start_time, end_time, timezone)
+        VALUES ($1, $2, $3, $4, $5)
+        `,
+        [eventId, day, "09:00", "17:00", "Asia/Kolkata"]
+      );
+    }
+
+    //  response
+    res.json({ id: eventId });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json(err);
   }
 };

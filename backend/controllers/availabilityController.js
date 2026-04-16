@@ -116,9 +116,10 @@ export const generateSlots = async (req, res) => {
     const duration = Number(event.duration) || 30;
 
     // get day
-    const day = new Date(date).toLocaleString("en-US", {
-      weekday: "long",
-    });
+    const d = new Date(date + "T00:00:00");
+const day = d.toLocaleDateString("en-US", { weekday: "long" });
+
+
 
     //  get availability
     const availRes = await db.query(
