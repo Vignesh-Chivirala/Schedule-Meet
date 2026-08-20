@@ -14,7 +14,10 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  credentials: true,
+}));
 app.use(express.json());
 
 // API Routes
@@ -26,12 +29,21 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Task Tracker API is healthy and running' });
 });
 
+// Root Endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'OK', message: 'Schedule Backend API is running' });
+});
+
 // Global Error Handlers
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
