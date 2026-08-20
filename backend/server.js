@@ -8,9 +8,6 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
 
-// Connect Database
-connectDB();
-
 const app = express();
 
 // Middleware
@@ -19,6 +16,19 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+// Database connection middleware for Serverless (Vercel)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection middleware error:', error.message);
+    res.status(500).json({
+      message: 'Database connection failed. Please ensure MONGO_URI is set in Vercel environment variables and 0.0.0.0/0 IP access is allowed in MongoDB Atlas.',
+    });
+  }
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
