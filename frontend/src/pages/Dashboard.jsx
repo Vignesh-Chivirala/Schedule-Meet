@@ -1,187 +1,270 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import api from "../api/api";
-import EventForm from "../components/EventForm";
+import React, { useState, useEffect, useCallback } from 'react';
+import API from '../api/axios';
+import Navbar from '../components/Navbar';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import TaskFilterBar from '../components/TaskFilterBar';
+import TaskCard from '../components/TaskCard';
+import TaskModal from '../components/TaskModal';
+import { AlertCircle, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 
-export default function Dashboard() {
-  const [events, setEvents] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editEvent, setEditEvent] = useState(null);
+const Dashboard = () => {
+  const [tasks, setTasks] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const fetchEvents = async () => {
+  // Filters, Search, Sort & Pagination State
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1, limit: 9 });
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch Analytics
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      setAnalyticsLoading(true);
+      const { data } = await API.get('/tasks/analytics');
+      setAnalytics(data);
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
+
+  // Fetch Tasks
+  const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      setError("");
-      const res = await api.get("/events");
-      setEvents(Array.isArray(res.data) ? res.data : []);
+      setError('');
+      const params = {
+        page,
+        limit: 9,
+        status: statusFilter,
+        priority: priorityFilter,
+        search: search.trim(),
+        sortBy,
+        order: sortOrder,
+      };
+      const { data } = await API.get('/tasks', { params });
+      setTasks(data.tasks);
+      setPagination({
+        total: data.total,
+        pages: data.pages,
+        limit: data.limit,
+      });
     } catch (err) {
-      console.error(err);
-      setError("We couldn't load your event types right now.");
+      console.error('Failed to fetch tasks:', err);
+      setError('Could not load tasks. Please check your connection.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, statusFilter, priorityFilter, search, sortBy, sortOrder]);
+
+  // Debounced search reset page
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, priorityFilter, sortBy, sortOrder]);
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    fetchTasks();
+  }, [fetchTasks]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this event?")) return;
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
+  // Modal Handlers
+  const handleOpenCreate = () => {
+    setCurrentTask(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (task) => {
+    setCurrentTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentTask(null);
+  };
+
+  // Submit Handler (Create or Update)
+  const handleModalSubmit = async (formData) => {
     try {
-      await api.delete(`/events/${id}`);
-      fetchEvents();
+      setSaving(true);
+      if (currentTask) {
+        await API.put(`/tasks/${currentTask._id}`, formData);
+      } else {
+        await API.post('/tasks', formData);
+      }
+      handleCloseModal();
+      fetchTasks();
+      fetchAnalytics();
     } catch (err) {
-      console.error(err);
-      setError("Deleting the event failed. Please try again.");
+      console.error('Failed to save task:', err);
+      alert(err.response?.data?.message || 'Error saving task');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete Handler
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await API.delete(`/tasks/${taskId}`);
+      fetchTasks();
+      fetchAnalytics();
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      alert('Error deleting task');
+    }
+  };
+
+  // Quick Status Toggle Handler
+  const handleToggleStatus = async (task, newStatus) => {
+    try {
+      // Optimistic update
+      setTasks((prev) =>
+        prev.map((t) => (t._id === task._id ? { ...t, status: newStatus } : t))
+      );
+      await API.put(`/tasks/${task._id}`, { status: newStatus });
+      fetchAnalytics();
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      fetchTasks(); // revert on failure
     }
   };
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <Link to="/" className="brand-mark">
-          <span className="brand-mark__dot" />
-          <span>Schedule</span>
-        </Link>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+      <Navbar />
 
-        <nav className="sidebar-nav">
-          <Link to="/dashboard" className="sidebar-link sidebar-link--active">
-            Event types
-          </Link>
-          <Link to="/bookings" className="sidebar-link">
-            Bookings
-          </Link>
-          <Link to="/availability" className="sidebar-link">
-            Availability
-          </Link>
-        </nav>
-      </aside>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Analytics Section */}
+        <AnalyticsDashboard analytics={analytics} loading={analyticsLoading} />
 
-      <main className="app-main">
-        <section className="page-header">
-          <div>
-            <span className="eyebrow">Workspace</span>
-            <h1>Event types</h1>
-            <p>Create shareable booking pages with concise public details.</p>
+        {/* Filter and Search Bar */}
+        <TaskFilterBar
+          search={search}
+          setSearch={setSearch}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          priorityFilter={priorityFilter}
+          setPriorityFilter={setPriorityFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          onOpenCreateModal={handleOpenCreate}
+        />
+
+        {/* Error Alert */}
+        {error && (
+          <div className="flex items-center space-x-2 p-4 mb-6 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-2xl text-red-600 dark:text-red-300 text-sm font-medium">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <span>{error}</span>
           </div>
+        )}
 
-          <button
-            type="button"
-            onClick={() => {
-              setEditEvent(null);
-              setShowModal(true);
-            }}
-            className="button button--primary"
-          >
-            New event type
-          </button>
-        </section>
-
-        <section className="stats-row">
-          <article className="stat-card">
-            <span>Total event types</span>
-            <strong>{events.length}</strong>
-          </article>
-          <article className="stat-card">
-            <span>Shareable links</span>
-            <strong>{events.filter((event) => event.slug).length}</strong>
-          </article>
-        </section>
-
-        {error ? <div className="notice notice--error">{error}</div> : null}
-
+        {/* Task Grid / Loading / Empty States */}
         {loading ? (
-          <div className="panel-empty">Loading event types...</div>
-        ) : events.length === 0 ? (
-          <div className="panel-empty">
-            <h2>No event types yet</h2>
-            <p>Create your first booking link to start sharing availability.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-48 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-2xl"></div>
+            ))}
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-12 text-center my-6 shadow-xs">
+            <div className="mx-auto w-16 h-16 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-4">
+              <Inbox className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+              No tasks found
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+              {search || statusFilter !== 'All' || priorityFilter !== 'All'
+                ? 'Try adjusting your search query or filters to find what you are looking for.'
+                : 'You do not have any tasks yet. Create your first task to get started!'}
+            </p>
+            <button
+              onClick={handleOpenCreate}
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center space-x-2"
+            >
+              <span>+ Create First Task</span>
+            </button>
           </div>
         ) : (
-          <section className="list-panel">
-            {events.map((event) => (
-              <article key={event.id} className="event-row">
-                <div className="event-row__main">
-                  <h2>{event.title}</h2>
-                  <p>{event.description || "No description added yet."}</p>
-                  <div className="event-meta">
-                    <span className="pill">/{event.slug}</span>
-                    <span className="pill">{event.duration} min</span>
-                    {(Number(event.buffer_before) || Number(event.buffer_after)) > 0 ? (
-                      <span className="pill">
-                        {Number(event.buffer_before) || 0}/{Number(event.buffer_after) || 0} min buffer
-                      </span>
-                    ) : null}
-                    {event.custom_question ? <span className="pill">Custom question</span> : null}
-                  </div>
-                </div>
-
-                <div className="event-actions">
-                 <Link to={`/book/${event.slug}`} className="button button--ghost">
-  Open
-</Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditEvent(event);
-                      setShowModal(true);
-                    }}
-                    className="button button--secondary"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(event.id)}
-                    className="button button--danger"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </article>
-            ))}
-          </section>
-        )}
-      </main>
-
-      {showModal ? (
-        <div className="modal-backdrop" role="presentation">
-          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
-            <div className="modal-card__header">
-              <div>
-                <span className="eyebrow">Event editor</span>
-                <h2 id="event-modal-title">
-                  {editEvent ? "Update event type" : "Create event type"}
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setShowModal(false);
-                  setEditEvent(null);
-                }}
-                className="button button--ghost"
-              >
-                Close
-              </button>
+          <>
+            {/* Task Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                  onEdit={handleOpenEdit}
+                  onDelete={handleDeleteTask}
+                  onToggleStatus={handleToggleStatus}
+                />
+              ))}
             </div>
 
-            <EventForm
-              refresh={fetchEvents}
-              editData={editEvent}
-              closeModal={() => {
-                setShowModal(false);
-                setEditEvent(null);
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
+            {/* Pagination Controls */}
+            {pagination.pages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-6 px-2">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Showing page <span className="font-semibold text-gray-900 dark:text-white">{page}</span> of{' '}
+                  <span className="font-semibold text-gray-900 dark:text-white">{pagination.pages}</span> ({pagination.total} tasks total)
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                    className="p-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-xs font-semibold px-3 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                    {page} / {pagination.pages}
+                  </span>
+                  <button
+                    disabled={page >= pagination.pages}
+                    onClick={() => setPage((prev) => Math.min(prev + 1, pagination.pages))}
+                    className="p-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+      </main>
+
+      {/* Create / Edit Modal */}
+      <TaskModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleModalSubmit}
+        initialTask={currentTask}
+        loading={saving}
+      />
     </div>
   );
-}
+};
+
+export default Dashboard;

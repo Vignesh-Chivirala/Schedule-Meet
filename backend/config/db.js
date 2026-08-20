@@ -1,23 +1,23 @@
-import pkg from "pg";
-import dotenv from "dotenv";
-dotenv.config();
+import mongoose from 'mongoose';
 
-const { Pool } = pkg;
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/tasktracker');
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
 
-const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+    console.warn("Attempting memory-server fallback if available...");
+    try {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongod = await MongoMemoryServer.create();
+      const uri = mongod.getUri();
+      const conn = await mongoose.connect(uri);
+      console.log(`MongoDB Memory Server Connected: ${conn.connection.host}`);
+    } catch (memErr) {
+      console.error("Could not start MongoMemoryServer:", memErr.message);
+    }
+  }
+};
 
-
-db.connect()
-  .then(() => {
-    console.log("Connected to Supabase PostgreSQL");
-  })
-  .catch((err) => {
-    console.error("DB Connection Error:", err.message);
-  });
-
-export default db;
+export default connectDB;
