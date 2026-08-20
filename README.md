@@ -116,7 +116,3 @@ A full-stack task management web application built using React (Vite), Node.js, 
 
 ---
 
-## Live link (if deployed)
-
-- Local Application URL: `http://localhost:5173`
-- Google Submission Form: [Google Assignment Submission Form](https://docs.google.com/forms/d/e/1FAIpQLSdc5wHM4EaV6bAqjnLqGBMT1-BxibEcuYyjqM8UkDdUDK4Hkw/viewform)
